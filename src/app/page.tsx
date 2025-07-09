@@ -13,7 +13,7 @@ const mockLists = [
 
 const mockTasks = [
   { id: 1, name: "Learn Next.js", description: "Complete the tutorial", listId: 1, status: "todo" },
-  { id: 2, name: "Build Portfolio", description: "Create personal website", listId: 1, status: "in_progress" },
+  { id: 2, name: "Build Portfolio", description: "Create personal website", listId: 1, status: "inprogress" },
   { id: 3, name: "Write Blog", description: "Tech article", listId: 1, status: "completed" },
 ];
 
@@ -60,7 +60,7 @@ export default function Home() {
                 <h2 className="text-lg font-semibold mb-4">In Progress</h2>
                 <ScrollArea className="h-[calc(100vh-250px)]">
                   {mockTasks
-                    .filter((task) => task.listId === list.id && task.status === "in_progress")
+                    .filter((task) => task.listId === list.id && task.status === "inprogress")
                     .map((task) => (
                       <TaskCard key={task.id} task={task} />
                     ))}

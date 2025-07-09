@@ -1,24 +1,52 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
-import { lists, tasks } from '../db/schema';
+import { lists, tasks, taskStatusEnum } from '../db/schema';
 import { publicProcedure, router } from '../trpc';
 
 export const databaseRouter = router({
   reset: publicProcedure
     .mutation(async () => {
-      // Delete all data from tables in correct order
-      await db.delete(tasks);
-      await db.delete(lists);
+      // Drop all tables
+      await db.execute(sql`DROP TABLE IF EXISTS tasks CASCADE;`);
+      await db.execute(sql`DROP TABLE IF EXISTS lists CASCADE;`);
+      await db.execute(sql`DROP TYPE IF EXISTS task_status CASCADE;`);
 
       // Reset sequences
-      await db.execute(sql`ALTER SEQUENCE tasks_id_seq RESTART WITH 1;`);
-      await db.execute(sql`ALTER SEQUENCE lists_id_seq RESTART WITH 1;`);
+      // await db.execute(sql`ALTER SEQUENCE tasks_id_seq RESTART WITH 1;`);
+      // await db.execute(sql`ALTER SEQUENCE lists_id_seq RESTART WITH 1;`);
 
       return { success: true };
     }),
 
   seed: publicProcedure
     .mutation(async () => {
+      // Create the task_status enum type
+      await db.execute(sql`
+        CREATE TYPE task_status AS ENUM ('todo', 'inprogress', 'completed');
+      `);
+
+      // Create the lists table
+      await db.execute(sql`
+        CREATE TABLE lists (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+
+      // Create the tasks table
+      await db.execute(sql`
+        CREATE TABLE tasks (
+          id SERIAL PRIMARY KEY,
+          list_id INTEGER REFERENCES lists(id),
+          name TEXT NOT NULL,
+          description TEXT,
+          deadline TIMESTAMP,
+          status task_status NOT NULL DEFAULT 'todo',
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+
       // Create sample lists
       const personalList = await db.insert(lists).values({
         name: "Personal Tasks",
